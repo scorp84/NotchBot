@@ -1,6 +1,6 @@
 cask "notchbot" do
-  version "1.0.1"
-  sha256 "e5c0eb955ede1d4234a1a39ffb3a1a737bb774b399a5d150d6b896d7a94af8a0"
+  version "1.0.2"
+  sha256 "fd6d6d02387ec2dd39323c46f898e6e222de279ca5057933841d1a2ea8ed47bd"
 
   url "https://github.com/scorp84/NotchBot/releases/download/v#{version}/NotchBot-#{version}.dmg"
   name "NotchBot"
