@@ -24,8 +24,13 @@ class NotchWindow: NSObject {
     private var cancellables = Set<AnyCancellable>()
     private var peekWork: DispatchWorkItem?
     private var mouseTimer: Timer?
+    private var rightClickMonitor: Any?
     private var outsideSince: Date?
     private var insideSince: Date?
+    private var settingsMenuOpen = false
+
+    /// Presents the menu-bar menu at a screen point. Set by the app delegate.
+    var onOpenSettings: ((NSPoint) -> Void)?
 
     static let morph = Animation.spring(response: 0.42, dampingFraction: 0.82)
 
@@ -53,7 +58,11 @@ class NotchWindow: NSObject {
         )
         panel.ignoresMouseEvents = true
 
-        let hostingView = NSHostingView(rootView: NotchContentView(viewModel: viewModel, store: store))
+        let hostingView = NSHostingView(rootView: NotchContentView(
+            viewModel: viewModel,
+            store: store,
+            onOpenSettings: { [weak self] in self?.onOpenSettings?(NSEvent.mouseLocation) }
+        ))
         hostingView.sizingOptions = []
         hostingView.frame = NSRect(origin: .zero, size: panel.frame.size)
         hostingView.autoresizingMask = [.width, .height]
@@ -81,6 +90,7 @@ class NotchWindow: NSObject {
         )
 
         startMouseWatch()
+        startRightClickWatch()
     }
 
     // MARK: - Geometry
@@ -164,7 +174,35 @@ class NotchWindow: NSObject {
         mouseTimer = timer
     }
 
+    /// Right-click (and control-click) anywhere on the notch opens settings,
+    /// including while the collapsed wings are covering the status item.
+    private func startRightClickWatch() {
+        rightClickMonitor = NSEvent.addLocalMonitorForEvents(matching: [.rightMouseDown]) { [weak self] event in
+            guard let self, !self.settingsMenuOpen, let open = self.onOpenSettings else { return event }
+            let point = NSEvent.mouseLocation
+            guard self.shapeRect.insetBy(dx: -4, dy: -4).contains(point) else { return event }
+            // Menu tracking must not start inside the monitor.
+            DispatchQueue.main.async { open(point) }
+            return nil
+        }
+    }
+
+    /// Shows `menu` with its top-left at `screenPoint`. Blocks until it closes.
+    func popUp(_ menu: NSMenu, at screenPoint: NSPoint) {
+        guard let view = panel.contentView, !settingsMenuOpen else { return }
+        settingsMenuOpen = true
+        outsideSince = nil
+        let windowPoint = panel.convertFromScreen(NSRect(origin: screenPoint, size: .zero)).origin
+        let viewPoint = view.convert(windowPoint, from: nil)
+        menu.popUp(positioning: nil, at: viewPoint, in: view)
+        settingsMenuOpen = false
+    }
+
     private func mouseTick() {
+        // The menu hangs below the notch, outside the shape. Leave the tray
+        // where it is until the menu closes.
+        if settingsMenuOpen { return }
+
         let p = NSEvent.mouseLocation
         let hit = shapeRect.insetBy(dx: viewModel.mode == .collapsed ? -4 : -8, dy: -8)
         let inside = hit.contains(p)
@@ -236,6 +274,10 @@ class NotchWindow: NSObject {
     func destroy() {
         mouseTimer?.invalidate()
         mouseTimer = nil
+        if let rightClickMonitor {
+            NSEvent.removeMonitor(rightClickMonitor)
+            self.rightClickMonitor = nil
+        }
         cancellables.removeAll()
         NotificationCenter.default.removeObserver(self)
         panel.orderOut(nil)

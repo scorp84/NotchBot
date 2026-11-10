@@ -8,6 +8,7 @@ import SwiftUI
 struct NotchContentView: View {
     @ObservedObject var viewModel: NotchViewModel
     @ObservedObject var store: AgentStore
+    var onOpenSettings: () -> Void
 
     private var mode: NotchMode { viewModel.mode }
     /// Constant so the top corners stay flush with the menu bar while the shape morphs.
@@ -37,7 +38,7 @@ struct NotchContentView: View {
                         .transition(.reveal(delay: 0.08))
                 }
                 if mode == .expanded {
-                    ExpandedView(store: store)
+                    ExpandedView(store: store, onOpenSettings: onOpenSettings)
                         .padding(.top, viewModel.notchHeight + 8)
                         .padding(.horizontal, 22)
                         .padding(.bottom, 14)
@@ -222,6 +223,7 @@ private struct PeekView: View {
 
 private struct ExpandedView: View {
     @ObservedObject var store: AgentStore
+    var onOpenSettings: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -268,7 +270,7 @@ private struct ExpandedView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
+        HStack(alignment: .center, spacing: 6) {
             Text(headline)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(.white)
@@ -282,12 +284,14 @@ private struct ExpandedView: View {
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(AgentState.failed.color)
             }
-            Spacer()
+            Spacer(minLength: 8)
             if store.completedToday > 0 {
                 Text(todayText)
                     .font(.system(size: 11).monospacedDigit())
                     .foregroundColor(.white.opacity(0.4))
             }
+            SettingsButton(action: onOpenSettings)
+                .layoutPriority(1)
         }
         .padding(.horizontal, 8)
         .frame(height: 22)
@@ -306,6 +310,30 @@ private struct ExpandedView: View {
         if store.workedToday >= 60 { t += " · \(Fmt.friendly(store.workedToday))" }
         return t
     }
+}
+
+/// Gear in the tray. The status item can sit under the notch wings, so this
+/// is the way into sounds, peek, launch-at-login and quit.
+private struct SettingsButton: View {
+    let action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        Button(action: handleOpenSettings) {
+            Image(systemName: "gearshape")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.white.opacity(hovering ? 0.95 : 0.45))
+                .frame(width: 22, height: 22)
+                .background(Circle().fill(.white.opacity(hovering ? 0.1 : 0)))
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
+        .help("NotchBot settings")
+        .accessibilityLabel("NotchBot settings")
+    }
+
+    private func handleOpenSettings() { action() }
 }
 
 private struct PlanUsageRow: View {

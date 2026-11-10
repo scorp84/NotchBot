@@ -12,6 +12,9 @@ class NotchAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         setupMenuBar()
         notchWindow = NotchWindow(store: store)
+        notchWindow?.onOpenSettings = { [weak self] point in
+            self?.popSettingsMenu(at: point)
+        }
         store.start()
 
         // Preview helpers: `open NotchBot.app --args --show` / `--peek`
@@ -107,6 +110,15 @@ class NotchAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         i.target = self
         if let state { i.state = state ? .on : .off }
         return i
+    }
+
+    /// Same menu as the status item, anchored at the pointer. The notch panel
+    /// sits above the menu bar and can cover its own icon, so the tray gear
+    /// and a right-click on the notch open it from here instead.
+    private func popSettingsMenu(at screenPoint: NSPoint) {
+        let menu = NSMenu()
+        menu.delegate = self
+        notchWindow?.popUp(menu, at: screenPoint)
     }
 
     @objc func toggleTray() { notchWindow?.toggle() }
