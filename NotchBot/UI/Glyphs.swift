@@ -3,8 +3,9 @@ import SwiftUI
 /// Harness marks with no tile: Clawd for Claude, the ChatGPT blossom for Codex, the cube for Cursor.
 ///
 /// Each mark has its own motion while working (Clawd hops and blinks, the blossom turns,
-/// the cube flips onto its edge) and a light sweeps across it every couple of seconds.
-/// Waiting, done and failed show as a small badge, and finishing makes the mark hop.
+/// the cube holds still inside an orange energy aura). A light also sweeps across the mark
+/// every couple of seconds. Waiting, done and failed show as a small badge, and finishing
+/// makes the mark hop.
 struct HarnessIcon: View {
     let harness: Harness
     var state: AgentState = .idle
@@ -23,13 +24,22 @@ struct HarnessIcon: View {
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !ticking)) { timeline in
             let t = timeline.date.timeIntervalSinceReferenceDate + phase
+            let glow = cursorGlow(t)
             mark(t)
                 .overlay {
                     if moving {
                         Shimmer(t: t).mask(mark(t, solid: true))
                     }
                 }
+                .shadow(color: Color(red: 1, green: 0.78, blue: 0.28).opacity(glow.hot), radius: glow.tight)
+                .shadow(color: Color(red: 1, green: 0.38, blue: 0.02).opacity(glow.bloom), radius: glow.wide)
                 .frame(width: markWidth, height: markSize)
+                .background {
+                    if harness == .cursor, state == .working {
+                        CursorEnergy(t: t, animate: moving)
+                            .frame(width: size * 1.36, height: size * 1.36)
+                    }
+                }
                 .offset(y: -hop(at: timeline.date))
                 .frame(width: width, height: size)
                 .overlay(alignment: .topTrailing) { badge(t) }
@@ -68,25 +78,17 @@ struct HarnessIcon: View {
                 .rotationEffect(.radians(moving ? t * 0.9 : 0))
                 .scaleEffect(moving ? 0.95 + 0.05 * sin(t * 2.4) : 1)
         case .cursor:
-            // A small yaw wobble never changed the silhouette at menu-bar size.
-            // Flip onto the edge and back, then rest so the mark stays readable.
-            let flip = moving ? cursorFlip(t) : (width: CGFloat(1), tilt: 0.0, lift: CGFloat(0))
             CursorCube()
-                .fill(white, style: FillStyle(eoFill: true))
-                .rotationEffect(.degrees(flip.tilt))
-                .scaleEffect(x: flip.width, y: moving ? 1 + (1 - flip.width) * 0.28 : 1)
-                .offset(y: -flip.lift)
+                .fill(Color.white.opacity(solid ? 1 : 0.96), style: FillStyle(eoFill: true))
         }
     }
 
-    /// One quick turn onto the cube's edge, then a rest facing forward.
-    private func cursorFlip(_ t: Double) -> (width: CGFloat, tilt: Double, lift: CGFloat) {
-        let period = 1.15
-        let p = t.truncatingRemainder(dividingBy: period) / period
-        let turn = 0.4
-        guard p < turn else { return (1, 0, 0) }
-        let pinch = sin((p / turn) * .pi)
-        return (CGFloat(1 - 0.86 * pinch), 16 * pinch, CGFloat(pinch) * markSize * 0.1)
+    /// Orange bloom hugging the cube. Zero unless Cursor is working.
+    private func cursorGlow(_ t: Double) -> (tight: CGFloat, wide: CGFloat, hot: Double, bloom: Double) {
+        guard harness == .cursor, state == .working else { return (0, 0, 0, 0) }
+        let beat = moving ? 0.62 + 0.38 * (0.5 + 0.5 * sin(t * 3.1)) : 0.8
+        let flicker = moving ? 0.78 + 0.22 * abs(sin(t * 13) * sin(t * 8.2)) : 1
+        return (markSize * 0.09, markSize * 0.34 * beat, 0.95 * flicker, 0.82 * beat)
     }
 
     /// Two quick hops, the second smaller, when a task finishes.
@@ -142,6 +144,62 @@ private struct Shimmer: View {
                 .offset(x: -w * 0.6 + sweep * w * 1.7, y: -g.size.height * 0.3)
         }
         .blendMode(.plusLighter)
+    }
+}
+
+/// Orange energy around the Cursor cube: a core in the cutout, a sweeping arc, and a few embers.
+private struct CursorEnergy: View {
+    var t: Double
+    var animate: Bool
+
+    private let ember = Color(red: 1.0, green: 0.88, blue: 0.45)
+    private let flame = Color(red: 1.0, green: 0.5, blue: 0.05)
+    private let deep = Color(red: 1.0, green: 0.28, blue: 0.0)
+
+    var body: some View {
+        GeometryReader { geo in
+            let s = min(geo.size.width, geo.size.height)
+            let spin = animate ? t * 150 : -28
+            ZStack {
+                Circle()
+                    .fill(flame.opacity(animate ? 0.55 + 0.4 * (0.5 + 0.5 * sin(t * 4.4)) : 0.75))
+                    .frame(width: s * 0.26, height: s * 0.26)
+                    .blur(radius: s * 0.045)
+
+                arc(s: s, width: s * 0.1, trim: 0.46)
+                    .rotationEffect(.degrees(spin))
+                    .blur(radius: s * 0.04)
+                    .opacity(0.9)
+                arc(s: s, width: s * 0.055, trim: 0.46)
+                    .rotationEffect(.degrees(spin))
+
+                arc(s: s, width: s * 0.04, trim: 0.16)
+                    .rotationEffect(.degrees(animate ? -t * 220 + 110 : 60))
+
+                ForEach(0..<3, id: \.self) { i in
+                    Circle()
+                        .fill(i == 0 ? Color.white : ember)
+                        .frame(width: max(1.8, s * (i == 0 ? 0.055 : 0.04)))
+                        .shadow(color: flame, radius: s * 0.035)
+                        .offset(y: -s * (0.33 + CGFloat(i) * 0.035))
+                        .rotationEffect(.degrees((animate ? t * (110 + Double(i) * 26) : 0) + Double(i) * 125))
+                        .opacity(animate ? 0.6 + 0.4 * abs(sin(t * 5 + Double(i) * 2.1)) : 0.85)
+                }
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+        }
+        .blendMode(.plusLighter)
+        .allowsHitTesting(false)
+    }
+
+    private func arc(s: CGFloat, width: CGFloat, trim: CGFloat) -> some View {
+        Circle()
+            .trim(from: 0.02, to: trim)
+            .stroke(
+                LinearGradient(colors: [.clear, ember, flame, deep.opacity(0.15)], startPoint: .leading, endPoint: .trailing),
+                style: StrokeStyle(lineWidth: width, lineCap: .round)
+            )
+            .padding(s * 0.07)
     }
 }
 
