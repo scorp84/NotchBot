@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.buymeacoffee.com/scorp84"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="44"></a>
+  <a href="https://www.buymeacoffee.com/floriankall"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="44"></a>
 </p>
 
 You start three agents, switch back to your own work, and find out twenty minutes later that one of them has been sitting on an approval the whole time.
@@ -93,9 +93,9 @@ The notch silhouette follows the same language as [NotchKit](https://github.com/
 
 <p align="center">
   If NotchBot catches one forgotten approval, star the repo.<br>
-  If it catches ten, <a href="https://www.buymeacoffee.com/scorp84">buy me a coffee</a>.
+  If it catches ten, <a href="https://www.buymeacoffee.com/floriankall">buy me a coffee</a>.
 </p>
 
 <p align="center">
-  <a href="https://www.buymeacoffee.com/scorp84"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="44"></a>
+  <a href="https://www.buymeacoffee.com/floriankall"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="44"></a>
 </p>
