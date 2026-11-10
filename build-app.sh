@@ -11,6 +11,10 @@ mkdir -p "$APP_DIR/Resources"
 
 cp .build/release/NotchBot "$APP_DIR/MacOS/NotchBot"
 cp NotchBot/Info.plist "$APP_DIR/Info.plist"
+
+VERSION="${1:-${NOTCHBOT_VERSION:-1.0.0}}"
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION}" "$APP_DIR/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${VERSION}" "$APP_DIR/Info.plist"
 xcrun actool "NotchBot/Resources/AppIcon.icon" \
   --compile "$APP_DIR/Resources" \
   --app-icon AppIcon \

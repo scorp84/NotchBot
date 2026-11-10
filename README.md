@@ -44,7 +44,20 @@ The menu-bar ✦ icon turns sounds, the finish banner, and launch-at-login on or
 
 ## Install
 
-macOS 14 or later, with Xcode or the Swift command-line tools. A notched MacBook is the home it was built for. On a display without a notch it sits as a pill in the menu bar.
+macOS 14 or later. A notched MacBook is the home it was built for. On a display without a notch it sits as a pill in the menu bar.
+
+The app stays MIT. The disk image and the Homebrew cask install that same build. Both are Apple silicon. On an Intel Mac, build from source.
+
+**Download.** Open the latest image on [GitHub Releases](https://github.com/scorp84/NotchBot/releases/latest) and drag NotchBot into Applications.
+
+**Homebrew.**
+
+```bash
+brew tap scorp84/notchbot https://github.com/scorp84/NotchBot
+brew install --cask scorp84/notchbot/notchbot
+```
+
+**From source.** Needs Xcode or the Swift command-line tools.
 
 ```bash
 git clone https://github.com/scorp84/NotchBot.git
@@ -53,10 +66,11 @@ bash build-app.sh
 open dist/NotchBot.app
 ```
 
-The build is ad-hoc signed, so the first launch needs a nudge from Gatekeeper. Right-click `dist/NotchBot.app`, choose **Open**, then **Open** again.
+The build is ad-hoc signed, so the first launch needs a nudge from Gatekeeper. Right-click NotchBot, choose **Open**, then **Open** again.
 
 ```bash
-xattr -dr com.apple.quarantine dist/NotchBot.app
+xattr -dr com.apple.quarantine /Applications/NotchBot.app   # disk image or Homebrew
+xattr -dr com.apple.quarantine dist/NotchBot.app            # built from source
 ```
 
 ## What it watches
@@ -83,6 +97,14 @@ swift build -c release
 .build/release/NotchBot --dump          # print every session the monitors can see
 open dist/NotchBot.app --args --show    # open the tray
 open dist/NotchBot.app --args --peek    # play the finish banner
+bash scripts/make-dmg.sh                # pack dist/NotchBot.app into a disk image
+```
+
+A version tag publishes that image. `v1.2.0` becomes `NotchBot-1.2.0.dmg` on the release, and the Homebrew cask on `main` moves to that build.
+
+```bash
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
 The notch silhouette follows the same language as [NotchKit](https://github.com/aishwaryaashok14/notch-kit) (MIT).

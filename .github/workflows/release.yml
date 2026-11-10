@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  dmg:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: NOTCHBOT_VERSION="${{ steps.version.outputs.version }}" bash build-app.sh
+
+      - name: Package disk image
+        run: bash scripts/make-dmg.sh "${{ steps.version.outputs.version }}"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          gh release create "v${VERSION}" \
+            "dist/NotchBot-${VERSION}.dmg" \
+            "dist/NotchBot-${VERSION}.dmg.sha256" \
+            --title "NotchBot ${VERSION}" \
+            --generate-notes
+
+      - name: Point the Homebrew cask at this release
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          SHA="$(shasum -a 256 "dist/NotchBot-${VERSION}.dmg" | awk '{print $1}')"
+          git fetch origin main
+          git checkout -B main origin/main
+          python3 - "$VERSION" "$SHA" <<'PY'
+          import pathlib, sys
+          version, sha = sys.argv[1], sys.argv[2]
+          path = pathlib.Path("Casks/notchbot.rb")
+          lines = []
+          for line in path.read_text().splitlines(keepends=True):
+              if line.startswith('  version "'):
+                  lines.append(f'  version "{version}"\n')
+              elif line.startswith('  sha256 "'):
+                  lines.append(f'  sha256 "{sha}"\n')
+              else:
+                  lines.append(line)
+          path.write_text("".join(lines))
+          PY
+          git add Casks/notchbot.rb
+          if git diff --cached --quiet; then
+            echo "Cask already points at ${VERSION}."
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "Point the Homebrew cask at ${VERSION}."
+          git push origin HEAD:main
