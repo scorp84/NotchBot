@@ -1,0 +1,96 @@
+{
+  "features" : [
+    "refractivity",
+    "specular-location"
+  ],
+  "fill-specializations" : [
+    {
+      "value" : {
+        "automatic-gradient" : "extended-srgb:0.10500,0.09800,0.14500,1.00000"
+      }
+    },
+    {
+      "appearance" : "dark",
+      "value" : {
+        "automatic-gradient" : "extended-srgb:0.06000,0.05500,0.08500,1.00000"
+      }
+    }
+  ],
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "image-name" : "light-claude.svg",
+          "name" : "Claude"
+        },
+        {
+          "glass" : false,
+          "image-name" : "light-codex.svg",
+          "name" : "Codex"
+        },
+        {
+          "glass" : false,
+          "image-name" : "light-cursor.svg",
+          "name" : "Cursor"
+        },
+        {
+          "blend-mode" : "plus-lighter",
+          "glass" : false,
+          "image-name" : "sweep.svg",
+          "name" : "Sweep"
+        }
+      ],
+      "name" : "Agents",
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 0.55
+      }
+    },
+    {
+      "blur-material" : 0.18,
+      "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "extended-srgb:0.03500,0.03500,0.04500,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "extended-srgb:0.01500,0.01500,0.02200,1.00000"
+              }
+            },
+            {
+              "appearance" : "tinted",
+              "value" : {
+                "solid" : "extended-srgb:1.00000,1.00000,1.00000,1.00000"
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "notch.svg",
+          "name" : "Housing"
+        }
+      ],
+      "lighting" : "combined",
+      "name" : "Notch",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.48
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.05
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [
+      "macOS"
+    ]
+  }
+}

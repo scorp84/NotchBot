@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:NotchBot}",
+            "name": "Debug NotchBot",
+            "target": "NotchBot",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug NotchBot"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:NotchBot}",
+            "name": "Release NotchBot",
+            "target": "NotchBot",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release NotchBot"
+        }
+    ]
+}
