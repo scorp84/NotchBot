@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="docs/media/notch.gif" width="760" alt="NotchBot in the MacBook notch: Claude, Codex and Cursor, with a bell because one agent is waiting">
+  <img src="docs/media/notch.gif" width="760" alt="NotchBot in the MacBook notch while agents are working: Claude, Codex and Cursor on the left, a live wave and the count on the right">
 </p>
 
 <h1 align="center">NotchBot</h1>
 
 <p align="center">
   <strong>Your coding agents, living in the notch.</strong><br>
-  Claude Code, Codex, and Cursor. Who’s working, who just finished, and who is stuck waiting for you.
+  Claude Code, Codex, and Cursor. Who’s working, who’s waiting, and how much of the plan is left.
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@ You start three agents, switch back to your own work, and find out twenty minute
 NotchBot watches the session files those tools already write, and puts the answer where your eyes already are.
 
 <p align="center">
-  <img src="docs/media/tray.gif" width="720" alt="Hovering the notch drops a tray of live sessions: two working, one waiting for approval, fifty-six finished today">
+  <img src="docs/media/tray.gif" width="720" alt="The notch tray open on plan usage: Claude at 81% of the weekly window, Codex at 36%, with live sessions underneath">
 </p>
 
 ## What you get
@@ -36,7 +36,9 @@ NotchBot watches the session files those tools already write, and puts the answe
 
 **When one finishes.** The notch drops a small banner — *Claude finished · 4m 12s* — and plays a soft sound. Click it to jump straight back into that app, or the terminal running it.
 
-**When you hover.** A tray of every session: title, project, the live step (`$ swift test`, `Editing Login.swift`, `Thinking…`), elapsed time, Codex sub-agents, and today’s finished count. Claude and Codex plan usage sits at the top, so you can see a 5-hour or weekly limit before you hit it. Click a row to focus that session.
+**How much plan is left.** Hover and the meters sit above the sessions. Claude shows the weekly window and the 5-hour window. Codex shows its window, the plan name, and any credit balance the app already recorded. The bar keeps the agent’s color, turns amber past 75%, and red past 90%. Once a limit is that hot and nothing more urgent is going on, the percentage shows in the notch itself.
+
+**When you hover.** Every session under those meters: title, project, the live step (`$ swift test`, `Editing Login.swift`, `Thinking…`), elapsed time, Codex sub-agents, and today’s finished count. Click a row to focus that session.
 
 The menu-bar ✦ icon turns sounds, the finish banner, and launch-at-login on or off.
 
@@ -68,7 +70,7 @@ xattr -dr com.apple.quarantine dist/NotchBot.app
 
 Connecting only adds NotchBot’s own entries. Your existing hooks and settings stay, and the file it edits gets a `.notchbot-backup` beside it.
 
-Plan meters are read from the snapshots Claude and Codex already keep locally (`~/.claude.json`, Codex `rate_limits` events). Cursor has no local usage file, so it doesn’t get a meter. Nothing here calls their APIs.
+The meters are read from the snapshots Claude and Codex already keep locally (`~/.claude.json`, Codex `rate_limits` events). Cursor has no local usage file, so it doesn’t get a meter. Nothing here calls their APIs.
 
 ## Private by default
 
