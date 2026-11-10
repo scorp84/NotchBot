@@ -29,7 +29,18 @@ if ! xcrun actool "NotchBot/Resources/AppIcon.icon" \
   cp NotchBot/Resources/AppIcon.icns "$APP_DIR/Resources/AppIcon.icns"
   cp NotchBot/Resources/Assets.car "$APP_DIR/Resources/Assets.car"
 fi
-codesign --force --sign - dist/NotchBot.app >/dev/null 2>&1 || true
+# Sealed into the bundle so the disk image can use it without rewriting a signed app.
+cp scripts/dmg-background.png "$APP_DIR/Resources/InstallerBackground.png"
+
+if [[ -n "${NOTCHBOT_SIGN_IDENTITY:-}" ]]; then
+  echo "Signing with ${NOTCHBOT_SIGN_IDENTITY}"
+  codesign --force --options runtime --timestamp \
+    --sign "$NOTCHBOT_SIGN_IDENTITY" \
+    dist/NotchBot.app
+  codesign --verify --deep --strict --verbose=2 dist/NotchBot.app
+else
+  codesign --force --sign - dist/NotchBot.app >/dev/null 2>&1 || true
+fi
 
 echo ""
 echo "NotchBot.app built successfully!"

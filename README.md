@@ -12,6 +12,7 @@
 <p align="center">
   <a href="https://github.com/scorp84/NotchBot/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/scorp84/NotchBot?style=flat&label=stars&color=black"></a>
   <img alt="macOS 14 or later" src="https://img.shields.io/badge/macOS-14%2B-black">
+  <img alt="Notarized" src="https://img.shields.io/badge/notarized-Developer%20ID-black">
   <img alt="Swift" src="https://img.shields.io/badge/Swift-5.9-F05138?logo=swift&logoColor=white">
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-blue"></a>
 </p>
@@ -46,9 +47,9 @@ The menu-bar ✦ icon turns sounds, the finish banner, and launch-at-login on or
 
 macOS 14 or later. A notched MacBook is the home it was built for. On a display without a notch it sits as a pill in the menu bar.
 
-The app stays MIT. The disk image and the Homebrew cask install that same build. Both are Apple silicon. On an Intel Mac, build from source.
+The app stays MIT. The disk image and the Homebrew cask install that same notarized build. Both are Apple silicon. On an Intel Mac, build from source.
 
-**Download.** Open the latest image on [GitHub Releases](https://github.com/scorp84/NotchBot/releases/latest) and drag NotchBot into Applications.
+**Download.** Open the latest image on [GitHub Releases](https://github.com/scorp84/NotchBot/releases/latest) and drag NotchBot into Applications. Apple has notarized that image, so Gatekeeper opens it.
 
 **Homebrew.**
 
@@ -66,11 +67,10 @@ bash build-app.sh
 open dist/NotchBot.app
 ```
 
-The build is ad-hoc signed, so the first launch needs a nudge from Gatekeeper. Right-click NotchBot, choose **Open**, then **Open** again.
+A build from source is ad-hoc signed. The first launch of that copy needs a nudge from Gatekeeper. Right-click NotchBot, choose **Open**, then **Open** again.
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/NotchBot.app   # disk image or Homebrew
-xattr -dr com.apple.quarantine dist/NotchBot.app            # built from source
+xattr -dr com.apple.quarantine dist/NotchBot.app
 ```
 
 ## What it watches
@@ -98,13 +98,17 @@ swift build -c release
 open dist/NotchBot.app --args --show    # open the tray
 open dist/NotchBot.app --args --peek    # play the finish banner
 bash scripts/make-dmg.sh                # pack dist/NotchBot.app into a disk image
+bash scripts/release-notarized.sh 1.2.0 # Developer ID signature, notarize, staple
 ```
 
-A version tag publishes that image. `v1.2.0` becomes `NotchBot-1.2.0.dmg` on the release, and the Homebrew cask on `main` moves to that build.
+`release-notarized.sh` needs `NOTCHBOT_NOTARY_PROFILE`, a `notarytool` keychain profile for the Developer ID. Publishing the stapled image moves the Homebrew cask on `main` to that build.
 
 ```bash
-git tag v1.2.0
-git push origin v1.2.0
+gh release create v1.2.0 \
+  dist/NotchBot-1.2.0.dmg \
+  dist/NotchBot-1.2.0.dmg.sha256 \
+  --title "NotchBot 1.2.0" \
+  --generate-notes
 ```
 
 The notch silhouette follows the same language as [NotchKit](https://github.com/aishwaryaashok14/notch-kit) (MIT).

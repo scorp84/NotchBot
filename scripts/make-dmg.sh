@@ -35,6 +35,10 @@ if [[ ! -f "$BACKGROUND" ]]; then
   echo "Missing $BACKGROUND." >&2
   exit 1
 fi
+if [[ ! -f "$APP/Contents/Resources/InstallerBackground.png" ]]; then
+  echo "Missing the installer background inside $APP. Run bash build-app.sh first." >&2
+  exit 1
+fi
 
 WORK="$(mktemp -d)"
 STAGE="$WORK/stage"
@@ -51,8 +55,8 @@ cleanup() {
 trap cleanup EXIT
 
 # Copy the app ourselves. hdiutil -srcfolder follows the Applications symlink
-# and would try to archive /Applications.
-cp -R "$APP" "$STAGE/NotchBot.app"
+# and would try to archive /Applications. ditto keeps the code signature.
+ditto "$APP" "$STAGE/NotchBot.app"
 ln -s /Applications "$STAGE/Applications"
 
 APP_MB="$(du -sm "$STAGE" | awk '{print $1}')"
@@ -73,11 +77,11 @@ if [[ -z "$DEVICE" || -z "$MOUNT" ]]; then
   exit 1
 fi
 
-cp -R "$STAGE/NotchBot.app" "$MOUNT/NotchBot.app"
+ditto "$STAGE/NotchBot.app" "$MOUNT/NotchBot.app"
 ln -s /Applications "$MOUNT/Applications"
-# Keep the picture inside the bundle. A sibling .background folder becomes
+# The picture lives inside the bundle. A sibling .background folder becomes
 # an extra icon when Finder is set to show hidden files, and it covers the title.
-cp "$BACKGROUND" "$MOUNT/NotchBot.app/Contents/Resources/InstallerBackground.png"
+# It is copied in before signing. Do not add it here: that would break the seal.
 BACKGROUND_ON_VOLUME="$MOUNT/NotchBot.app/Contents/Resources/InstallerBackground.png"
 
 style_finder_window() {
@@ -146,8 +150,16 @@ style_finder_window
 rm -rf "$MOUNT/.fseventsd" "$MOUNT/.Trashes" "$MOUNT/.TemporaryItems"
 
 # Finder writes .DS_Store when the window closes. Give it a moment to flush.
+# Re-seal afterwards. Finder styling can touch the bundle, and the signature
+# has to match the bytes that end up in the image.
 sync
 sleep 1
+if [[ -n "${NOTCHBOT_SIGN_IDENTITY:-}" ]]; then
+  codesign --force --options runtime --timestamp \
+    --sign "$NOTCHBOT_SIGN_IDENTITY" \
+    "$MOUNT/NotchBot.app"
+  codesign --verify --deep --strict --verbose=2 "$MOUNT/NotchBot.app"
+fi
 
 detached=0
 for _ in 1 2 3 4 5 6; do
